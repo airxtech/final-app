@@ -8,10 +8,11 @@ import styles from './styles.module.css';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isBlurReady, setIsBlurReady] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [isVideoVisible, setIsVideoVisible] = useState(true);
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
+  const blurRef = useRef<HTMLDivElement>(null);
   const attemptCountRef = useRef(0);
 
   const forceVideoPlay = async () => {
@@ -19,7 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       try {
         await videoRef.current.play();
         setIsVideoVisible(true);
-        attemptCountRef.current = 0; // Reset counter on successful play
+        attemptCountRef.current = 0;
       } catch (error) {
         console.error('Video play error:', error);
         setIsVideoVisible(false);
@@ -27,21 +28,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Function to handle video restart
-  const handleVideoRestart = () => {
-    if (!isVideoVisible && attemptCountRef.current < 3) { // Limit retry attempts
-      attemptCountRef.current += 1;
-      setIsVideoVisible(true);
-      forceVideoPlay();
-    }
+  const showVideoWithDelay = () => {
+    // First, ensure blur is ready
+    setIsBlurReady(true);
+    
+    // Wait for blur to be rendered and computed
+    requestAnimationFrame(() => {
+      // Double RAF to ensure blur is fully applied
+      requestAnimationFrame(() => {
+        // Add a small delay for iOS to catch up with blur
+        setTimeout(() => {
+          setIsVideoVisible(true);
+          forceVideoPlay();
+        }, 50); // Small delay to ensure blur is visible first
+      });
+    });
   };
 
   useEffect(() => {
-    // Initialize blur first
-    requestAnimationFrame(() => {
-      setIsBlurReady(true);
-    });
-
     document.body.style.overflow = 'hidden';
     
     const webApp = window.Telegram?.WebApp;
@@ -54,56 +58,44 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const handleVisibilityChange = async () => {
+    // Initial load
+    showVideoWithDelay();
+
+    const handleVisibilityChange = () => {
       if (document.hidden) {
         setIsVideoVisible(false);
         if (videoRef.current) {
           videoRef.current.pause();
         }
       } else {
-        // Small delay to ensure proper state restoration
-        setTimeout(() => {
-          setIsVideoVisible(true);
-          forceVideoPlay();
-        }, 100);
+        // Reset states when coming back to visible
+        setIsBlurReady(false);
+        setIsVideoVisible(false);
+        
+        // Reinitialize with delay
+        showVideoWithDelay();
       }
     };
-
-    // Add interaction listeners to restart video
-    const interactionEvents = ['touchstart', 'click', 'scroll'];
-    const handleInteraction = () => {
-      if (!isVideoVisible) {
-        handleVideoRestart();
-      }
-    };
-
-    interactionEvents.forEach(event => {
-      document.addEventListener(event, handleInteraction, { once: false });
-    });
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     // iOS specific handlers
     const handleFocus = () => {
-      setTimeout(() => {
-        setIsVideoVisible(true);
-        forceVideoPlay();
-      }, 100);
+      setIsBlurReady(false);
+      setIsVideoVisible(false);
+      showVideoWithDelay();
     };
 
     window.addEventListener('focus', handleFocus);
     window.addEventListener('pageshow', handleFocus);
 
     return () => {
-      interactionEvents.forEach(event => {
-        document.removeEventListener(event, handleInteraction);
-      });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('pageshow', handleFocus);
       document.body.style.overflow = '';
     };
-  }, [isVideoVisible]);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -111,11 +103,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className={styles.background} />
       
       {/* Blur layer */}
-      {isBlurReady && <div className={styles.blurOverlay} />}
+      {<div 
+        ref={blurRef}
+        className={`${styles.blurOverlay} ${isBlurReady ? styles.blurActive : ''}`} 
+      />}
       
       {/* Video layer */}
       {isBlurReady && !videoError && isVideoVisible && (
-        <div className={styles.videoContainer}>
+        <div className={`${styles.videoContainer} ${isVideoLoaded ? styles.videoActive : ''}`}>
           <video
             ref={videoRef}
             autoPlay
@@ -124,14 +119,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             playsInline
             onLoadedData={() => {
               setIsVideoLoaded(true);
-              forceVideoPlay();
             }}
             onError={(e) => {
               console.error('Video error event:', e);
               setVideoError(true);
               setIsVideoVisible(false);
             }}
-            className={`${styles.backgroundVideo} ${isVideoLoaded ? styles.videoLoaded : ''}`}
+            className={styles.backgroundVideo}
           >
             <source src="/bgvideo.mp4" type="video/mp4" />
           </video>
