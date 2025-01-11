@@ -20,22 +20,33 @@
     z-index: 0;
   }
   
-  .mediaWrapper {
+  .compositeLayer {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-    will-change: opacity;
+    /* Force composite layer in WebView */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    /* Additional composite layer hints */
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000;
+    -webkit-perspective: 1000;
   }
   
-  .mediaActive {
-    opacity: 1;
+  .videoWrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Force single composite layer with video */
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
   }
   
   .backgroundVideo {
@@ -45,12 +56,18 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.5;
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    /* Ensure video is in same composite layer */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
   
-  .blurOverlay {
+  .videoLoaded {
+    opacity: 0.5;
+  }
+  
+  .glassEffect {
     position: absolute;
     top: 0;
     left: 0;
@@ -59,8 +76,10 @@
     background: rgba(17, 24, 39, 0.3);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
+    /* Force into same composite layer as video */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    pointer-events: none;
   }
   
   .main {

@@ -10,25 +10,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
 
-  const resetVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      setIsLoaded(false);
-    }
-  };
-
-  const startVideo = async () => {
-    if (videoRef.current) {
-      try {
-        videoRef.current.currentTime = 0;
-        await videoRef.current.play();
-        setIsLoaded(true);
-      } catch (error) {
-        console.error('Video play error:', error);
-      }
-    }
-  };
-
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     
@@ -43,15 +24,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
 
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        resetVideo();
-      } else {
-        setTimeout(startVideo, 50);
+      if (videoRef.current) {
+        if (document.hidden) {
+          videoRef.current.pause();
+        } else {
+          videoRef.current.play().catch(console.error);
+        }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    startVideo();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -61,28 +43,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.container}>
-      {/* Background color */}
+      {/* Fixed background color */}
       <div className={styles.background} />
       
-      {/* Combined video and blur container */}
-      <div className={`${styles.mediaWrapper} ${isLoaded ? styles.mediaActive : ''}`}>
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          onLoadedData={() => setIsLoaded(true)}
-          onError={(e) => {
-            console.error('Video error event:', e);
-          }}
-          className={styles.backgroundVideo}
-        >
-          <source src="/bgvideo.mp4" type="video/mp4" />
-        </video>
-        
-        {/* Permanent blur overlay */}
-        <div className={styles.blurOverlay} />
+      {/* Single composite layer for video and blur */}
+      <div className={styles.compositeLayer}>
+        {/* Video with permanent blur */}
+        <div className={styles.videoWrapper}>
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            onLoadedData={() => setIsLoaded(true)}
+            className={`${styles.backgroundVideo} ${isLoaded ? styles.videoLoaded : ''}`}
+          >
+            <source src="/bgvideo.mp4" type="video/mp4" />
+          </video>
+          {/* Permanent glass effect that's part of the video layer */}
+          <div className={styles.glassEffect} />
+        </div>
       </div>
 
       <Header />
