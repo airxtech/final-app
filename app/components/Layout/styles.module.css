@@ -20,45 +20,23 @@
     z-index: 0;
   }
   
-  .blurOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(17, 24, 39, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.2s ease-out;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: opacity;
-  }
-  
-  .blurActive {
-    opacity: 1;
-  }
-  
-  .videoContainer {
+  .mediaContainer {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
+    z-index: 1;
     opacity: 0;
     transition: opacity 0.3s ease-in;
     will-change: opacity;
-    /* Force GPU acceleration */
     transform: translate3d(0, 0, 0);
     -webkit-transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
   
-  .videoActive {
+  .mediaActive {
     opacity: 1;
   }
   
@@ -72,8 +50,19 @@
     opacity: 0.5;
     transform: translate3d(0, 0, 0);
     -webkit-transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
+  }
+  
+  .blurOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
   }
   
   .main {
