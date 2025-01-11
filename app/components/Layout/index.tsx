@@ -7,26 +7,26 @@ import styles from './styles.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const snapshotRef = useRef<HTMLDivElement>(null);
 
-  const handleMinimize = () => {
-    if (snapshotRef.current && videoRef.current) {
-      // When minimizing, immediately show the snapshot div with solid bg color
-      setIsMinimized(true);
+  const resetVideo = () => {
+    if (videoRef.current && containerRef.current) {
+      videoRef.current.pause();
+      setIsLoaded(false);
     }
   };
 
-  const handleMaximize = () => {
-    // Hide snapshot and restart video
-    setIsMinimized(false);
-    if (videoRef.current) {
-      setTimeout(() => {
-        videoRef.current?.play().catch(() => {});
-      }, 50);
+  const startVideo = async () => {
+    if (videoRef.current && containerRef.current) {
+      try {
+        videoRef.current.currentTime = 0;
+        await videoRef.current.play();
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Video play error:', error);
+      }
     }
   };
 
@@ -45,57 +45,53 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        handleMinimize();
+        resetVideo();
       } else {
-        handleMaximize();
+        setTimeout(startVideo, 50);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pagehide', handleMinimize);
-    window.addEventListener('pageshow', handleMaximize);
-    window.addEventListener('focus', handleMaximize);
-    window.addEventListener('blur', handleMinimize);
+    startVideo();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pagehide', handleMinimize);
-      window.removeEventListener('pageshow', handleMaximize);
-      window.removeEventListener('focus', handleMaximize);
-      window.removeEventListener('blur', handleMinimize);
       document.body.style.overflow = '';
     };
   }, []);
 
   return (
     <div className={styles.container}>
-      {/* Background color is always visible */}
-      <div className={styles.background} />
-      
-      {/* Snapshot overlay for minimize state */}
-      <div 
-        ref={snapshotRef}
-        className={`${styles.snapshot} ${isMinimized ? styles.snapshotActive : ''}`} 
-      />
-      
-      {/* Media container */}
-      <div 
-        ref={containerRef}
-        className={`${styles.mediaContainer} ${isLoaded ? styles.mediaActive : ''} ${isMinimized ? styles.mediaHidden : ''}`}
-      >
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          onLoadedData={() => setIsLoaded(true)}
-          className={styles.backgroundVideo}
+      {/* Base background with static blur */}
+      <div className={styles.background}>
+        {/* Static blur elements */}
+        <div className={styles.blurElement}></div>
+        <div className={styles.blurElement} style={{ left: '25%' }}></div>
+        <div className={styles.blurElement} style={{ left: '50%' }}></div>
+        <div className={styles.blurElement} style={{ left: '75%' }}></div>
+      </div>
+
+      {/* Video wrapped in blur container */}
+      <div className={styles.blurWrap}>
+        <div 
+          ref={containerRef}
+          className={`${styles.mediaContainer} ${isLoaded ? styles.mediaActive : ''}`}
         >
-          <source src="/bgvideo.mp4" type="video/mp4" />
-        </video>
-        
-        <div className={styles.blurOverlay} />
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            onLoadedData={() => setIsLoaded(true)}
+            onError={(e) => {
+              console.error('Video error event:', e);
+            }}
+            className={styles.backgroundVideo}
+          >
+            <source src="/bgvideo.mp4" type="video/mp4" />
+          </video>
+        </div>
       </div>
 
       <Header />
