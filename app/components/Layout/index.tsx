@@ -7,13 +7,20 @@ import styles from './styles.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [shouldShowVideo, setShouldShowVideo] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Prevent body scrolling
     document.body.style.overflow = 'hidden';
     
+    // Initialize blur first, then show video
+    setTimeout(() => {
+      setShouldShowVideo(true);
+    }, 100);
+
     const webApp = window.Telegram?.WebApp;
     if (webApp) {
       try {
@@ -30,12 +37,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         if (document.hidden) {
           videoRef.current.pause();
         } else {
-          // Force video restart on visibility change
           videoRef.current.currentTime = 0;
           const playPromise = videoRef.current.play();
           if (playPromise !== undefined) {
             playPromise.catch(() => {
-              // Auto-play was prevented, try again with user interaction
               const resumeVideo = () => {
                 if (videoRef.current && videoRef.current.paused) {
                   videoRef.current.play().catch(() => {});
@@ -51,29 +56,41 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // iOS specific: handle focus events
-    const handleFocus = () => {
-      if (videoRef.current && videoRef.current.paused) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+    // Handle scroll limits
+    const handleScroll = () => {
+      if (mainRef.current) {
+        const { scrollHeight, clientHeight, scrollTop } = mainRef.current;
+        if (scrollTop + clientHeight > scrollHeight) {
+          mainRef.current.scrollTop = scrollHeight - clientHeight;
+        }
+        if (scrollTop < 0) {
+          mainRef.current.scrollTop = 0;
+        }
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('pageshow', handleFocus);
+    const scrollContainer = mainRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+    }
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('pageshow', handleFocus);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
       document.body.style.overflow = '';
     };
   }, []);
 
   return (
     <div className={styles.container}>
+      {/* Blur overlay that's always present */}
+      <div className={styles.blurOverlay} />
+      
+      {/* Video that loads after blur */}
       <div className={styles.videoContainer}>
-        {!videoError && (
+        {!videoError && shouldShowVideo && (
           <video
             ref={videoRef}
             autoPlay
@@ -98,7 +115,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Header />
       
       <main className={styles.main}>
-        <div className={styles.scrollContainer}>
+        <div ref={mainRef} className={styles.scrollContainer}>
           {children}
         </div>
       </main>

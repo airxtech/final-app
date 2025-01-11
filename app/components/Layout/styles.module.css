@@ -11,6 +11,20 @@
     -webkit-overflow-scrolling: touch;
   }
   
+  .blurOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(17, 24, 39, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
   .videoContainer {
     position: fixed;
     top: 0;
@@ -45,8 +59,8 @@
     right: 0;
     bottom: 0;
     padding-top: 7rem;
-    padding-bottom: 5rem;
-    z-index: 1;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    z-index: 2;
     overflow: hidden;
   }
   
@@ -55,4 +69,6 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 0 1rem;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
   }
