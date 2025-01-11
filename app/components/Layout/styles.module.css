@@ -6,9 +6,18 @@
     bottom: 0;
     height: 100vh;
     width: 100vw;
-    background-color: rgb(17, 24, 39);
     overflow: hidden;
     -webkit-overflow-scrolling: touch;
+  }
+  
+  .background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(17, 24, 39);
+    z-index: 0;
   }
   
   .blurOverlay {
@@ -21,6 +30,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 1;
+    opacity: 1;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
   }

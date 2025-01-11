@@ -6,21 +6,20 @@ import Header from '../Header';
 import styles from './styles.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const [isBlurReady, setIsBlurReady] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [shouldShowVideo, setShouldShowVideo] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Prevent body scrolling
+    // Initialize blur first
+    requestAnimationFrame(() => {
+      setIsBlurReady(true);
+    });
+
     document.body.style.overflow = 'hidden';
     
-    // Initialize blur first, then show video
-    setTimeout(() => {
-      setShouldShowVideo(true);
-    }, 100);
-
     const webApp = window.Telegram?.WebApp;
     if (webApp) {
       try {
@@ -31,66 +30,60 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Handle iOS video playback
     const handleVisibilityChange = () => {
       if (videoRef.current) {
         if (document.hidden) {
           videoRef.current.pause();
         } else {
-          videoRef.current.currentTime = 0;
-          const playPromise = videoRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(() => {
-              const resumeVideo = () => {
-                if (videoRef.current && videoRef.current.paused) {
-                  videoRef.current.play().catch(() => {});
-                }
-                document.removeEventListener('touchend', resumeVideo);
-              };
-              document.addEventListener('touchend', resumeVideo);
-            });
-          }
+          // Reset blur and video states on visibility change
+          setIsBlurReady(false);
+          setIsVideoLoaded(false);
+          
+          requestAnimationFrame(() => {
+            setIsBlurReady(true);
+            videoRef.current?.play().catch(() => {});
+          });
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Handle scroll limits
-    const handleScroll = () => {
-      if (mainRef.current) {
-        const { scrollHeight, clientHeight, scrollTop } = mainRef.current;
-        if (scrollTop + clientHeight > scrollHeight) {
-          mainRef.current.scrollTop = scrollHeight - clientHeight;
+    // Handle iOS wake from background
+    const handleFocus = () => {
+      setIsBlurReady(false);
+      setIsVideoLoaded(false);
+      
+      requestAnimationFrame(() => {
+        setIsBlurReady(true);
+        if (videoRef.current && videoRef.current.paused) {
+          videoRef.current.play().catch(() => {});
         }
-        if (scrollTop < 0) {
-          mainRef.current.scrollTop = 0;
-        }
-      }
+      });
     };
 
-    const scrollContainer = mainRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-    }
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleFocus);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      }
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleFocus);
       document.body.style.overflow = '';
     };
   }, []);
 
   return (
     <div className={styles.container}>
-      {/* Blur overlay that's always present */}
-      <div className={styles.blurOverlay} />
+      {/* Background color is always visible */}
+      <div className={styles.background} />
       
-      {/* Video that loads after blur */}
-      <div className={styles.videoContainer}>
-        {!videoError && shouldShowVideo && (
+      {/* Blur layer */}
+      {isBlurReady && <div className={styles.blurOverlay} />}
+      
+      {/* Video layer */}
+      {isBlurReady && !videoError && (
+        <div className={styles.videoContainer}>
           <video
             ref={videoRef}
             autoPlay
@@ -104,13 +97,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             }}
             className={`${styles.backgroundVideo} ${isVideoLoaded ? styles.videoLoaded : ''}`}
           >
-            <source 
-              src="/bgvideo.mp4" 
-              type="video/mp4"
-            />
+            <source src="/bgvideo.mp4" type="video/mp4" />
           </video>
-        )}
-      </div>
+        </div>
+      )}
 
       <Header />
       
