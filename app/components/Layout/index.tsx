@@ -9,17 +9,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const resetVideo = () => {
-    if (videoRef.current && containerRef.current) {
+    if (videoRef.current) {
       videoRef.current.pause();
       setIsLoaded(false);
     }
   };
 
   const startVideo = async () => {
-    if (videoRef.current && containerRef.current) {
+    if (videoRef.current) {
       try {
         videoRef.current.currentTime = 0;
         await videoRef.current.play();
@@ -62,36 +61,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.container}>
-      {/* Base background with static blur */}
-      <div className={styles.background}>
-        {/* Static blur elements */}
-        <div className={styles.blurElement}></div>
-        <div className={styles.blurElement} style={{ left: '25%' }}></div>
-        <div className={styles.blurElement} style={{ left: '50%' }}></div>
-        <div className={styles.blurElement} style={{ left: '75%' }}></div>
-      </div>
-
-      {/* Video wrapped in blur container */}
-      <div className={styles.blurWrap}>
-        <div 
-          ref={containerRef}
-          className={`${styles.mediaContainer} ${isLoaded ? styles.mediaActive : ''}`}
+      {/* Background color */}
+      <div className={styles.background} />
+      
+      {/* Combined video and blur container */}
+      <div className={`${styles.mediaWrapper} ${isLoaded ? styles.mediaActive : ''}`}>
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onLoadedData={() => setIsLoaded(true)}
+          onError={(e) => {
+            console.error('Video error event:', e);
+          }}
+          className={styles.backgroundVideo}
         >
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            onLoadedData={() => setIsLoaded(true)}
-            onError={(e) => {
-              console.error('Video error event:', e);
-            }}
-            className={styles.backgroundVideo}
-          >
-            <source src="/bgvideo.mp4" type="video/mp4" />
-          </video>
-        </div>
+          <source src="/bgvideo.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Permanent blur overlay */}
+        <div className={styles.blurOverlay} />
       </div>
 
       <Header />

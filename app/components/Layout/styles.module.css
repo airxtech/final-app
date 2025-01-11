@@ -8,7 +8,6 @@
     width: 100vw;
     overflow: hidden;
     -webkit-overflow-scrolling: touch;
-    background-color: rgb(17, 24, 39);
   }
   
   .background {
@@ -17,62 +16,22 @@
     left: 0;
     right: 0;
     bottom: 0;
+    background-color: rgb(17, 24, 39);
     z-index: 0;
-    overflow: hidden;
   }
   
-  /* Static blur elements that iOS will cache */
-  .blurElement {
-    position: absolute;
-    top: -50%;
-    left: 0;
-    width: 25%;
-    height: 200%;
-    background: rgba(255, 255, 255, 0.02);
-    transform: rotate(35deg);
-    filter: blur(30px);
-    -webkit-filter: blur(30px);
-  }
-  
-  /* Container that creates glass effect */
-  .blurWrap {
+  .mediaWrapper {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 1;
-    background: rgba(17, 24, 39, 0.3);
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    overflow: hidden;
-  }
-  
-  .blurWrap::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.01) 100%
-    );
-  }
-  
-  .mediaContainer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     opacity: 0;
-    transition: opacity 0.3s ease-in;
-    will-change: opacity;
+    transition: opacity 0.3s ease;
     transform: translate3d(0, 0, 0);
     -webkit-transform: translate3d(0, 0, 0);
+    will-change: opacity;
   }
   
   .mediaActive {
@@ -87,6 +46,19 @@
     height: 100%;
     object-fit: cover;
     opacity: 0.5;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+  
+  .blurOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(17, 24, 39, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     transform: translate3d(0, 0, 0);
     -webkit-transform: translate3d(0, 0, 0);
   }
