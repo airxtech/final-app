@@ -8,11 +8,17 @@
   --background-end-rgb: 17, 24, 39;
 }
 
+html, body {
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-    to bottom,
-    rgb(var(--background-start-rgb)),
-    rgb(var(--background-end-rgb))
-  );
+  background: rgb(var(--background-start-rgb));
+  touch-action: none;
 }
