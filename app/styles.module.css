@@ -2,6 +2,23 @@
     max-width: 64rem;
     margin: 0 auto;
     padding: 0 1rem;
+    position: relative;
+  }
+  
+  .blurOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(8px);
+    background-color: rgba(17, 24, 39, 0.3);
+    z-index: 0;
+  }
+  
+  .content {
+    position: relative;
+    z-index: 1;
   }
   
   .title {
@@ -11,9 +28,9 @@
     margin-bottom: 1.5rem;
   }
   
-  .content {
+  .contentBox {
     background-color: rgba(31, 41, 55, 0.5);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
     border-radius: 0.5rem;
     padding: 1.5rem;
     color: rgb(229, 231, 235);
