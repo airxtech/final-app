@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Navigation from '../Navigation';
 import Header from '../Header';
 import styles from './styles.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
   useEffect(() => {
-    // Initialize Telegram WebApp
     const webApp = window.Telegram?.WebApp;
     if (webApp) {
       try {
@@ -21,14 +22,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={styles.container}>
+      {/* Fallback background color is handled in CSS */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className={styles.backgroundVideo}
+        onLoadedData={() => setIsVideoLoaded(true)}
+        className={`${styles.backgroundVideo} ${isVideoLoaded ? styles.videoLoaded : ''}`}
+        poster="/video-poster.jpg" // Optional: Add a poster image
       >
-        <source src="/bgvideo.mp4" type="video/mp4" />
+        <source 
+          src="/bgvideo.mp4" 
+          type="video/mp4"
+        />
       </video>
 
       <Header />
