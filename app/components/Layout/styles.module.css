@@ -20,21 +20,6 @@
     z-index: 0;
   }
   
-  .blurOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(17, 24, 39, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 1;
-    opacity: 1;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-  }
-  
   .videoContainer {
     position: fixed;
     top: 0;
