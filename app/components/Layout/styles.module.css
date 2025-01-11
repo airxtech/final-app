@@ -1,20 +1,29 @@
 .container {
-    position: relative;
-    min-height: 100vh;
+    position: fixed; /* Change from relative to fixed */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgb(17, 24, 39);
-    overflow: hidden;
+    overflow: hidden; /* Prevent any scrolling of the container */
+    -webkit-overflow-scrolling: touch; /* Better iOS scroll handling */
   }
   
   .backgroundVideo {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.3s ease-in-out;
     z-index: 0;
+    transform: translateZ(0); /* Force hardware acceleration */
+    -webkit-transform: translateZ(0);
+    will-change: transform; /* Optimize for animations */
   }
   
   .videoLoaded {
@@ -22,9 +31,14 @@
   }
   
   .main {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto; /* Allow scrolling only in main content */
+    -webkit-overflow-scrolling: touch;
     padding-bottom: 5rem;
-    padding-top: 7rem; /* Adjusted to match new header padding */
+    padding-top: 7rem;
     z-index: 1;
-    min-height: 100vh;
   }

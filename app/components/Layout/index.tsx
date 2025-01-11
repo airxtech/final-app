@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Navigation from '../Navigation';
 import Header from '../Header';
 import styles from './styles.module.css';
@@ -8,9 +8,9 @@ import styles from './styles.module.css';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Telegram WebApp initialization
     const webApp = window.Telegram?.WebApp;
     if (webApp) {
       try {
@@ -21,26 +21,45 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Video debugging
-    console.log('Video path:', '/bgvideo.mp4');
-    const video = document.querySelector('video');
-    console.log('Video element:', video);
-    if (video) {
-      video.addEventListener('error', (e) => {
-        console.error('Video error:', e);
-        setVideoError(true);
-      });
-      video.addEventListener('loadeddata', () => {
-        console.log('Video loaded successfully');
-        setIsVideoLoaded(true);
-      });
-    }
+    // Handle iOS video playback
+    const handleVisibilityChange = () => {
+      if (videoRef.current) {
+        if (document.hidden) {
+          videoRef.current.pause();
+        } else {
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              // Auto-play was prevented, try again with user interaction
+              document.addEventListener('touchstart', () => {
+                videoRef.current?.play();
+              }, { once: true });
+            });
+          }
+        }
+      }
+    };
+
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Handle iOS wake from background
+    window.addEventListener('focus', () => {
+      if (videoRef.current && videoRef.current.paused) {
+        videoRef.current.play();
+      }
+    });
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (
     <div className={styles.container}>
       {!videoError && (
         <video
+          ref={videoRef}
           autoPlay
           loop
           muted

@@ -6,6 +6,10 @@
     z-index: 50;
     background-color: rgba(17, 24, 39, 0.7);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding-bottom: env(safe-area-inset-bottom, 0px); /* iOS safe area */
+    transform: translateZ(0); /* Force hardware acceleration */
+    -webkit-transform: translateZ(0);
   }
   
   .container {
@@ -13,34 +17,4 @@
     grid-template-columns: repeat(5, 1fr);
     gap: 0.25rem;
     padding: 0.5rem;
-  }
-  
-  .link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 0.25rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s;
-    color: rgb(156, 163, 175);
-  }
-  
-  .link:hover {
-    color: rgb(243, 244, 246);
-  }
-  
-  .active {
-    color: rgb(96, 165, 250);
-    background-color: rgba(31, 41, 55, 0.5);
-  }
-  
-  .icon {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-  
-  .label {
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
   }
