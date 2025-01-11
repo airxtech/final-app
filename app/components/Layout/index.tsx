@@ -8,8 +8,6 @@ import styles from './styles.module.css';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isBlurReady, setIsBlurReady] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [isVideoVisible, setIsVideoVisible] = useState(false);
-  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -21,7 +19,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       if (videoContainerRef.current) {
         videoContainerRef.current.style.display = 'none';
       }
-      setIsVideoVisible(false);
       setIsVideoLoaded(false);
     }
   };
@@ -37,7 +34,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         
         // Show video container
         videoContainerRef.current.style.display = 'block';
-        setIsVideoVisible(true);
         
         // Reset video time and play
         videoRef.current.currentTime = 0;
@@ -45,6 +41,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setIsVideoLoaded(true);
       } catch (error) {
         console.error('Video play error:', error);
+        // If video fails to play, at least show the blur
+        setIsBlurReady(true);
       }
     }
   };
@@ -116,8 +114,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           }}
           onError={(e) => {
             console.error('Video error event:', e);
-            setVideoError(true);
-            setIsVideoVisible(false);
+            // If video errors, ensure blur is still shown
+            setIsBlurReady(true);
           }}
           className={styles.backgroundVideo}
         >
