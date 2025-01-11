@@ -16,7 +16,7 @@
   opacity: 0;
 }
 
-.canvas {
+.canvas, .blurCanvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -26,6 +26,11 @@
   transition: opacity 0.3s ease;
 }
 
-.visible {
+.canvas.visible {
   opacity: 0.5;
+}
+
+.blurCanvas.visible {
+  opacity: 0.3;
+  mix-blend-mode: overlay;
 }

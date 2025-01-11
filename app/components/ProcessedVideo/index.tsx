@@ -7,37 +7,39 @@ export default function ProcessedVideo() {
   const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const blurCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !blurCanvasRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const blurCanvas = blurCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const blurCtx = blurCanvas.getContext('2d');
     
-    if (!ctx) return;
+    if (!ctx || !blurCtx) return;
 
-    // Set canvas size to match video
     const updateCanvasSize = () => {
       const rect = video.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
+      blurCanvas.width = rect.width;
+      blurCanvas.height = rect.height;
     };
 
-    // Process video frame
     const processFrame = () => {
       if (!video.paused && !video.ended) {
         updateCanvasSize();
         
-        // Draw original frame
+        // Draw original frame on both canvases
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        blurCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Apply blur effect
-        ctx.filter = 'blur(8px)';
-        ctx.globalAlpha = 0.3;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        ctx.filter = 'none';
-        ctx.globalAlpha = 1.0;
+        // Apply stronger blur to the blur canvas
+        blurCtx.filter = 'blur(8px)';
+        blurCtx.globalAlpha = 0.3;
+        blurCtx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
         
         requestAnimationFrame(processFrame);
       }
@@ -51,9 +53,14 @@ export default function ProcessedVideo() {
       }
     };
 
-    // Start processing when video is ready
     video.addEventListener('playing', processFrame);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Force start processing after video loads
+    video.addEventListener('loadeddata', () => {
+      setIsLoaded(true);
+      video.play().catch(console.error);
+    });
 
     return () => {
       video.removeEventListener('playing', processFrame);
@@ -70,13 +77,16 @@ export default function ProcessedVideo() {
         muted
         playsInline
         className={styles.video}
-        onLoadedData={() => setIsLoaded(true)}
       >
         <source src="/bgvideo.mp4" type="video/mp4" />
       </video>
       <canvas 
         ref={canvasRef}
         className={`${styles.canvas} ${isLoaded ? styles.visible : ''}`}
+      />
+      <canvas 
+        ref={blurCanvasRef}
+        className={`${styles.blurCanvas} ${isLoaded ? styles.visible : ''}`}
       />
     </div>
   );
