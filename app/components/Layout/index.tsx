@@ -7,27 +7,26 @@ import styles from './styles.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const snapshotRef = useRef<HTMLDivElement>(null);
 
-  const resetVideo = () => {
-    if (videoRef.current && containerRef.current) {
-      videoRef.current.pause();
-      setIsLoaded(false);
+  const handleMinimize = () => {
+    if (snapshotRef.current && videoRef.current) {
+      // When minimizing, immediately show the snapshot div with solid bg color
+      setIsMinimized(true);
     }
   };
 
-  const startVideo = async () => {
-    if (videoRef.current && containerRef.current) {
-      try {
-        // Reset video time and play
-        videoRef.current.currentTime = 0;
-        await videoRef.current.play();
-        setIsLoaded(true);
-      } catch (error) {
-        console.error('Video play error:', error);
-      }
+  const handleMaximize = () => {
+    // Hide snapshot and restart video
+    setIsMinimized(false);
+    if (videoRef.current) {
+      setTimeout(() => {
+        videoRef.current?.play().catch(() => {});
+      }, 50);
     }
   };
 
@@ -46,27 +45,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        resetVideo();
+        handleMinimize();
       } else {
-        setTimeout(startVideo, 50);
+        handleMaximize();
       }
     };
 
-    const handleFocus = () => {
-      resetVideo();
-      setTimeout(startVideo, 50);
-    };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('pageshow', handleFocus);
-
-    startVideo();
+    window.addEventListener('pagehide', handleMinimize);
+    window.addEventListener('pageshow', handleMaximize);
+    window.addEventListener('focus', handleMaximize);
+    window.addEventListener('blur', handleMinimize);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('pageshow', handleFocus);
+      window.removeEventListener('pagehide', handleMinimize);
+      window.removeEventListener('pageshow', handleMaximize);
+      window.removeEventListener('focus', handleMaximize);
+      window.removeEventListener('blur', handleMinimize);
       document.body.style.overflow = '';
     };
   }, []);
@@ -76,12 +72,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Background color is always visible */}
       <div className={styles.background} />
       
-      {/* Combined video and blur container */}
+      {/* Snapshot overlay for minimize state */}
+      <div 
+        ref={snapshotRef}
+        className={`${styles.snapshot} ${isMinimized ? styles.snapshotActive : ''}`} 
+      />
+      
+      {/* Media container */}
       <div 
         ref={containerRef}
-        className={`${styles.mediaContainer} ${isLoaded ? styles.mediaActive : ''}`}
+        className={`${styles.mediaContainer} ${isLoaded ? styles.mediaActive : ''} ${isMinimized ? styles.mediaHidden : ''}`}
       >
-        {/* Video layer */}
         <video
           ref={videoRef}
           autoPlay
@@ -89,15 +90,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           muted
           playsInline
           onLoadedData={() => setIsLoaded(true)}
-          onError={(e) => {
-            console.error('Video error event:', e);
-          }}
           className={styles.backgroundVideo}
         >
           <source src="/bgvideo.mp4" type="video/mp4" />
         </video>
         
-        {/* Blur layer - always present above video */}
         <div className={styles.blurOverlay} />
       </div>
 

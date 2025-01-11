@@ -20,6 +20,26 @@
     z-index: 0;
   }
   
+  /* Snapshot layer that appears during minimize */
+  .snapshot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(17, 24, 39);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s ease-out;
+    z-index: 3;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  .snapshotActive {
+    opacity: 1;
+  }
+  
   .mediaContainer {
     position: fixed;
     top: 0;
@@ -32,12 +52,14 @@
     will-change: opacity;
     transform: translate3d(0, 0, 0);
     -webkit-transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
   }
   
   .mediaActive {
     opacity: 1;
+  }
+  
+  .mediaHidden {
+    display: none;
   }
   
   .backgroundVideo {
