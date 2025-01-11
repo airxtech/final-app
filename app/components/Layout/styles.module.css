@@ -51,6 +51,11 @@
     opacity: 0;
     transition: opacity 0.3s ease-in;
     will-change: opacity;
+    /* Force GPU acceleration */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
   
   .videoActive {
@@ -65,8 +70,10 @@
     height: 100%;
     object-fit: cover;
     opacity: 0.5;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
   
   .main {

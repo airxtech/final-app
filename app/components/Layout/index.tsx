@@ -12,37 +12,41 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
-  const blurRef = useRef<HTMLDivElement>(null);
-  const attemptCountRef = useRef(0);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
-  const forceVideoPlay = async () => {
+  const resetVideo = () => {
     if (videoRef.current) {
-      try {
-        await videoRef.current.play();
-        setIsVideoVisible(true);
-        attemptCountRef.current = 0;
-      } catch (error) {
-        console.error('Video play error:', error);
-        setIsVideoVisible(false);
+      videoRef.current.pause();
+      // Force video element to reset
+      if (videoContainerRef.current) {
+        videoContainerRef.current.style.display = 'none';
       }
+      setIsVideoVisible(false);
+      setIsVideoLoaded(false);
     }
   };
 
-  const showVideoWithDelay = () => {
-    // First, ensure blur is ready
-    setIsBlurReady(true);
-    
-    // Wait for blur to be rendered and computed
-    requestAnimationFrame(() => {
-      // Double RAF to ensure blur is fully applied
-      requestAnimationFrame(() => {
-        // Add a small delay for iOS to catch up with blur
-        setTimeout(() => {
-          setIsVideoVisible(true);
-          forceVideoPlay();
-        }, 50); // Small delay to ensure blur is visible first
-      });
-    });
+  const startVideo = async () => {
+    if (videoRef.current && videoContainerRef.current) {
+      try {
+        // Ensure blur is ready first
+        setIsBlurReady(true);
+        
+        // Wait a frame for blur to be applied
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        
+        // Show video container
+        videoContainerRef.current.style.display = 'block';
+        setIsVideoVisible(true);
+        
+        // Reset video time and play
+        videoRef.current.currentTime = 0;
+        await videoRef.current.play();
+        setIsVideoLoaded(true);
+      } catch (error) {
+        console.error('Video play error:', error);
+      }
+    }
   };
 
   useEffect(() => {
@@ -58,36 +62,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Initial load
-    showVideoWithDelay();
-
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setIsVideoVisible(false);
-        if (videoRef.current) {
-          videoRef.current.pause();
-        }
+        resetVideo();
       } else {
-        // Reset states when coming back to visible
-        setIsBlurReady(false);
-        setIsVideoVisible(false);
-        
-        // Reinitialize with delay
-        showVideoWithDelay();
+        // Small delay to ensure proper state reset
+        setTimeout(startVideo, 50);
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // iOS specific handlers
     const handleFocus = () => {
-      setIsBlurReady(false);
-      setIsVideoVisible(false);
-      showVideoWithDelay();
+      resetVideo();
+      setTimeout(startVideo, 50);
     };
 
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('pageshow', handleFocus);
+
+    // Start video initially
+    startVideo();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -103,34 +97,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className={styles.background} />
       
       {/* Blur layer */}
-      {<div 
-        ref={blurRef}
-        className={`${styles.blurOverlay} ${isBlurReady ? styles.blurActive : ''}`} 
-      />}
+      <div className={`${styles.blurOverlay} ${isBlurReady ? styles.blurActive : ''}`} />
       
       {/* Video layer */}
-      {isBlurReady && !videoError && isVideoVisible && (
-        <div className={`${styles.videoContainer} ${isVideoLoaded ? styles.videoActive : ''}`}>
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            onLoadedData={() => {
-              setIsVideoLoaded(true);
-            }}
-            onError={(e) => {
-              console.error('Video error event:', e);
-              setVideoError(true);
-              setIsVideoVisible(false);
-            }}
-            className={styles.backgroundVideo}
-          >
-            <source src="/bgvideo.mp4" type="video/mp4" />
-          </video>
-        </div>
-      )}
+      <div 
+        ref={videoContainerRef}
+        className={`${styles.videoContainer} ${isVideoLoaded ? styles.videoActive : ''}`}
+        style={{ display: 'none' }}
+      >
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onLoadedData={() => {
+            setIsVideoLoaded(true);
+          }}
+          onError={(e) => {
+            console.error('Video error event:', e);
+            setVideoError(true);
+            setIsVideoVisible(false);
+          }}
+          className={styles.backgroundVideo}
+        >
+          <source src="/bgvideo.mp4" type="video/mp4" />
+        </video>
+      </div>
 
       <Header />
       
