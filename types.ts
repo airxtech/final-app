@@ -5,6 +5,7 @@ declare global {
           ready: () => void;
           expand: () => void;
           close: () => void;
+          setBackgroundColor: (color: string) => void;
           MainButton: {
             text: string;
             color: string;
