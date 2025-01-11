@@ -1,23 +1,20 @@
 .container {
     position: relative;
     min-height: 100vh;
-    background-color: rgb(17, 24, 39); /* Fallback background */
+    background-color: rgb(17, 24, 39);
     overflow: hidden;
   }
   
   .backgroundVideo {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    transform: translateX(-50%) translateY(-50%);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     object-fit: cover;
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
-    z-index: -1;
+    z-index: 0;
   }
   
   .videoLoaded {
@@ -27,6 +24,7 @@
   .main {
     position: relative;
     padding-bottom: 5rem;
-    padding-top: 8rem;
+    padding-top: 7rem; /* Adjusted to match new header padding */
     z-index: 1;
+    min-height: 100vh;
   }
