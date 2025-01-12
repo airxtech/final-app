@@ -23,30 +23,6 @@ export default function EarnPage() {
   const router = useRouter()
   const [tonConnectUI] = useTonConnectUI()
 
-  const handleStopFarming = async () => {
-    if (!user || farmingAmount === 0) return
-    setFarming(false)
-
-    try {
-      const response = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          telegramId: user.telegramId,
-          zoaBalance: user.zoaBalance + farmingAmount
-        })
-      })
-
-      if (response.ok) {
-        const updatedUser = await response.json()
-        setUser(updatedUser)
-        setFarmingAmount(0)
-      }
-    } catch (error) {
-      console.error('Error updating balance:', error)
-    }
-  }
-
   useEffect(() => {
     fetchUserData()
   }, [])
@@ -65,13 +41,36 @@ export default function EarnPage() {
     return () => clearInterval(interval)
   }, [farming, lastUpdate])
 
+  // Cleanup effect for farming
   useEffect(() => {
     return () => {
-      if (farming) {
-        handleStopFarming()
+      if (farming && user) {
+        // Stop farming cleanup
+        const stopFarming = async () => {
+          try {
+            const response = await fetch('/api/user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                telegramId: user.telegramId,
+                zoaBalance: user.zoaBalance + farmingAmount
+              })
+            })
+
+            if (response.ok) {
+              const updatedUser = await response.json()
+              setUser(updatedUser)
+              setFarmingAmount(0)
+            }
+          } catch (error) {
+            console.error('Error updating balance:', error)
+          }
+        }
+
+        stopFarming()
       }
     }
-  }, [farming, handleStopFarming]) // Added handleStopFarming to dependencies
+  }, [farming, user, farmingAmount])
 
   const fetchUserData = async () => {
     try {
@@ -86,12 +85,6 @@ export default function EarnPage() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
-    }
-  }
-
-  const handleWalletRequired = () => {
-    if (!tonConnectUI.connected) {
-      router.push('/wallet')
     }
   }
 
@@ -161,7 +154,7 @@ export default function EarnPage() {
           <h3>Scratch to Earn</h3>
           <p>Scratch cards refresh daily. Remaining today: {user.scratchChances}</p>
           <button
-            onClick={() => tonConnectUI.connected ? setShowScratchCard(true) : handleWalletRequired()}
+            onClick={() => tonConnectUI.connected ? setShowScratchCard(true) : router.push('/wallet')}
             disabled={user.scratchChances <= 0}
             className={styles.scratchButton}
           >
@@ -173,7 +166,7 @@ export default function EarnPage() {
           <h3>ZOA Farming</h3>
           <p>Earn 0.0002 ZOA per second while farming</p>
           <button
-            onClick={farming ? handleStopFarming : handleStartFarming}
+            onClick={farming ? () => setFarming(false) : handleStartFarming}
             className={`${styles.farmButton} ${farming ? styles.active : ''}`}
           >
             {farming ? 'Stop Farming' : 'Start Farming'}
