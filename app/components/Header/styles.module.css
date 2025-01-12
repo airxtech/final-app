@@ -8,6 +8,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     padding-top: env(safe-area-inset-top, 1rem);
+    padding-top: 1rem;
   }
   
   .container {
