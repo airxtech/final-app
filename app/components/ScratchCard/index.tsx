@@ -4,8 +4,8 @@ import React, { useRef, useState, useEffect } from 'react'
 import styles from './styles.module.css'
 
 interface ScratchCardProps {
-  onClose: () => void
-  onReveal: (amount: number) => void
+  onClose: () => void;
+  onReveal: (amount: number) => Promise<void>;
 }
 
 export default function ScratchCard({ onClose, onReveal }: ScratchCardProps) {
@@ -13,58 +13,47 @@ export default function ScratchCard({ onClose, onReveal }: ScratchCardProps) {
   const backgroundCanvasRef = useRef<HTMLCanvasElement>(null)
   const [isRevealed, setIsRevealed] = useState(false)
   const [hasScratchStarted, setHasScratchStarted] = useState(false)
-  const [reward, setReward] = useState<number | null>(null)
+  const [reward] = useState(() => Math.round((Math.random() * 0.9 + 0.1) * 100) / 100)
   const [isDrawing, setIsDrawing] = useState(false)
-  const [loading, setLoading] = useState(true)
   const scratchRadius = 25
 
   useEffect(() => {
-    const initScratchCard = async () => {
-      // Generate random reward between 0.1 and 1.0 ZOA
-      const rewardAmount = Math.round((Math.random() * 0.9 + 0.1) * 100) / 100
-      setReward(rewardAmount)
-      setLoading(false)
+    const mainCanvas = canvasRef.current
+    const bgCanvas = backgroundCanvasRef.current
+    if (!mainCanvas || !bgCanvas) return
 
-      const mainCanvas = canvasRef.current
-      const bgCanvas = backgroundCanvasRef.current
-      if (!mainCanvas || !bgCanvas) return
+    const size = Math.min(window.innerWidth * 0.8, 300)
+    mainCanvas.width = size
+    mainCanvas.height = size
+    bgCanvas.width = size
+    bgCanvas.height = size
 
-      const size = Math.min(window.innerWidth * 0.8, 300)
-      mainCanvas.width = size
-      mainCanvas.height = size
-      bgCanvas.width = size
-      bgCanvas.height = size
+    // Set up background canvas with reward amount
+    const bgCtx = bgCanvas.getContext('2d')
+    if (!bgCtx) return
 
-      // Set up background canvas
-      const bgCtx = bgCanvas.getContext('2d')
-      if (!bgCtx) return
+    bgCtx.fillStyle = '#1e293b'
+    bgCtx.fillRect(0, 0, size, size)
+    bgCtx.font = 'bold 40px Arial'
+    bgCtx.textAlign = 'center'
+    bgCtx.textBaseline = 'middle'
+    
+    const gradient = bgCtx.createLinearGradient(size/4, size/2, 3*size/4, size/2)
+    gradient.addColorStop(0, '#00a3ff')
+    gradient.addColorStop(1, '#00fff2')
+    bgCtx.fillStyle = gradient
+    bgCtx.fillText(`${reward.toFixed(2)} ZOA`, size/2, size/2)
 
-      bgCtx.fillStyle = 'rgb(17, 24, 39)'
-      bgCtx.fillRect(0, 0, size, size)
-      bgCtx.font = 'bold 40px Arial'
-      bgCtx.textAlign = 'center'
-      bgCtx.textBaseline = 'middle'
-      
-      // Create gradient for text
-      const gradient = bgCtx.createLinearGradient(size/4, size/2, 3*size/4, size/2)
-      gradient.addColorStop(0, '#00a3ff')
-      gradient.addColorStop(1, '#00fff2')
-      bgCtx.fillStyle = gradient
-      bgCtx.fillText(`${rewardAmount.toFixed(2)} ZOA`, size/2, size/2)
+    // Set up scratch layer
+    const ctx = mainCanvas.getContext('2d')
+    if (!ctx) return
 
-      // Set up scratch layer
-      const ctx = mainCanvas.getContext('2d')
-      if (!ctx) return
-
-      const scratchGradient = ctx.createLinearGradient(0, 0, size, size)
-      scratchGradient.addColorStop(0, '#00a3ff')
-      scratchGradient.addColorStop(1, '#00fff2')
-      ctx.fillStyle = scratchGradient
-      ctx.fillRect(0, 0, size, size)
-    }
-
-    initScratchCard()
-  }, [])
+    const scratchGradient = ctx.createLinearGradient(0, 0, size, size)
+    scratchGradient.addColorStop(0, '#00a3ff')
+    scratchGradient.addColorStop(1, '#00fff2')
+    ctx.fillStyle = scratchGradient
+    ctx.fillRect(0, 0, size, size)
+  }, [reward])
 
   const calculateScratchPercentage = (ctx: CanvasRenderingContext2D) => {
     const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -76,8 +65,8 @@ export default function ScratchCard({ onClose, onReveal }: ScratchCardProps) {
     return (transparent / (pixels.length / 4)) * 100
   }
 
-  const handleTouch = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || isRevealed || !reward) return
+  const handleTouch = async (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing || isRevealed) return
     e.preventDefault()
 
     const canvas = canvasRef.current
@@ -107,19 +96,9 @@ export default function ScratchCard({ onClose, onReveal }: ScratchCardProps) {
     if (percentage >= 60 && !isRevealed) {
       setIsRevealed(true)
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      onReveal(reward)
+      await onReveal(reward)
       setTimeout(onClose, 1500)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className={styles.modal}>
-        <div className={styles.container}>
-          <p className={styles.loading}>Loading your reward...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
