@@ -72,11 +72,12 @@ export default function EarnPage() {
 
   const fetchUserData = async () => {
     try {
-      // Type assertion to access Telegram WebApp data
+      // Use type assertion just for this specific access
       const tg = (window as any).Telegram?.WebApp
-      if (!tg?.initDataUnsafe?.user?.id) return
+      const userId = tg?.initDataUnsafe?.user?.id
+      if (!userId) return
 
-      const response = await fetch(`/api/user?telegramId=${tg.initDataUnsafe.user.id}`)
+      const response = await fetch(`/api/user?telegramId=${userId}`)
       const data = await response.json()
       
       if (response.ok) {
