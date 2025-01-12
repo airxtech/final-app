@@ -7,6 +7,7 @@ import { WalletButton } from '@/app/components/shared/WalletButton'
 import { Spinner } from '@/app/components/shared/Spinner'
 import { RefreshCw, ExternalLink } from 'lucide-react'
 import styles from './styles.module.css'
+import Image from 'next/image'
 import { getTelegramUser, openTelegramLink } from '@/app/utils/telegram'
 
 // Types based on Prisma schema
@@ -249,23 +250,26 @@ export default function WalletPage() {
                 userTokens.map((userToken) => (
                   <div key={userToken.id} className={styles.tokenCard}>
                     <div className={styles.tokenInfo}>
-                      <div className={styles.tokenLogo}>
-                        {userToken.token.imageUrl ? (
-                          <img
-                            src={userToken.token.imageUrl}
-                            alt={userToken.token.name}
-                            className={styles.tokenImage}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.style.display = 'none'
-                              const parent = target.parentElement
-                              if (parent) {
-                                parent.textContent = '🪙'
-                              }
-                            }}
-                          />
-                        ) : '🪙'}
-                      </div>
+                    <div className={styles.tokenLogo}>
+                      {userToken.token.imageUrl ? (
+                        <Image
+                          src={userToken.token.imageUrl}
+                          alt={userToken.token.name}
+                          width={40}
+                          height={40}
+                          className={styles.tokenImage}
+                          onError={(e) => {
+                            // Need to cast target to prevent TypeScript errors
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent) {
+                              parent.textContent = '🪙'
+                            }
+                          }}
+                        />
+                      ) : '🪙'}
+                    </div>
                       <div className={styles.tokenDetails}>
                         <h3>{userToken.token.name}</h3>
                         <span className={styles.ticker}>{userToken.token.ticker}</span>

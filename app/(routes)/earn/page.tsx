@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTonConnectUI } from '@tonconnect/ui-react'
 import styles from './styles.module.css'
 import ScratchCard from '@/app/components/shared/ScratchCard'
-import { getTelegramUser, openTelegramLink } from '@/app/utils/telegram'
+import { getTelegramUser } from '@/app/utils/telegram'
 
 interface User {
   telegramId: number;
@@ -23,31 +23,33 @@ export default function EarnPage() {
   const router = useRouter()
   const [tonConnectUI] = useTonConnectUI()
 
+  const handleStopFarming = async () => {
+    if (!user || farmingAmount === 0) return
+    setFarming(false)
+
+    try {
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId: user.telegramId,
+          zoaBalance: user.zoaBalance + farmingAmount
+        })
+      })
+
+      if (response.ok) {
+        const updatedUser = await response.json()
+        setUser(updatedUser)
+        setFarmingAmount(0)
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error)
+    }
+  }
+
   useEffect(() => {
     fetchUserData()
   }, [])
-
-  const fetchUserData = async () => {
-    try {
-      const userId = getTelegramUser();
-      if (!userId) return;
-
-      const response = await fetch(`/api/user?telegramId=${userId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setUser(data);
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-  }
-
-  const handleWalletRequired = () => {
-    if (!tonConnectUI.connected) {
-      router.push('/wallet')
-    }
-  }
 
   useEffect(() => {
     if (!farming) return
@@ -63,14 +65,35 @@ export default function EarnPage() {
     return () => clearInterval(interval)
   }, [farming, lastUpdate])
 
-  // Reset farming when user navigates away
   useEffect(() => {
     return () => {
       if (farming) {
         handleStopFarming()
       }
     }
-  }, [farming])
+  }, [farming, handleStopFarming]) // Added handleStopFarming to dependencies
+
+  const fetchUserData = async () => {
+    try {
+      const userId = getTelegramUser()
+      if (!userId) return
+
+      const response = await fetch(`/api/user?telegramId=${userId}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setUser(data)
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+    }
+  }
+
+  const handleWalletRequired = () => {
+    if (!tonConnectUI.connected) {
+      router.push('/wallet')
+    }
+  }
 
   const handleScratchReveal = async (amount: number) => {
     if (!user) return
@@ -113,30 +136,6 @@ export default function EarnPage() {
     setTimeout(() => {
       disclaimer.remove()
     }, 3000)
-  }
-
-  const handleStopFarming = async () => {
-    if (!user || farmingAmount === 0) return
-    setFarming(false)
-
-    try {
-      const response = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          telegramId: user.telegramId,
-          zoaBalance: user.zoaBalance + farmingAmount
-        })
-      })
-
-      if (response.ok) {
-        const updatedUser = await response.json()
-        setUser(updatedUser)
-        setFarmingAmount(0)
-      }
-    } catch (error) {
-      console.error('Error updating balance:', error)
-    }
   }
 
   if (!user) {

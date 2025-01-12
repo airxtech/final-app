@@ -3,7 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   optimizeFonts: true,
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   // Add asset prefix for static files if needed
   // assetPrefix: process.env.NODE_ENV === 'production' ? 'https://your-cdn.com' : '',
