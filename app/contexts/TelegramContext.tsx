@@ -23,14 +23,14 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initTelegram = async () => {
       try {
-        // Safe type assertion since we know the actual shape
-        const webApp = (window.Telegram?.WebApp as ExtendedTelegramWebApp);
-        
-        if (!webApp) {
+        // Check if we're in the browser and Telegram WebApp is available
+        if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
           throw new Error('Telegram WebApp is not available');
         }
 
+        const webApp = window.Telegram.WebApp as ExtendedTelegramWebApp;
         webApp.ready();
+        console.log('WebApp Data:', webApp.initDataUnsafe); // Debug log
 
         // Validate the authentication
         const response = await fetch('/api/auth', {
@@ -47,13 +47,14 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Authentication failed');
         }
 
-        // Get user data from Telegram WebApp
         const userData = webApp.initDataUnsafe?.user;
+        console.log('User Data:', userData); // Debug log
+
         if (userData) {
           setUser(userData);
           
           // Initialize user in database
-          await fetch('/api/user', {
+          const dbResponse = await fetch('/api/user', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -65,8 +66,9 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
               username: userData.username,
             }),
           });
-        } else {
-          throw new Error('No user data available');
+
+          const dbData = await dbResponse.json();
+          console.log('DB Response:', dbData); // Debug log
         }
       } catch (err) {
         console.error('Telegram initialization error:', err);

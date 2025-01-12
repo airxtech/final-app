@@ -34,15 +34,21 @@ export default function Earn() {
   }, [user?.id])
 
   const handleFarming = async () => {
-    if (!user?.id) return
+    if (!user?.id) {
+      console.log('No user ID available'); // Debug log
+      return;
+    }
 
     if (isFarming) {
+      console.log('Stopping farming...'); // Debug log
       if (farmingIntervalRef.current) {
         clearInterval(farmingIntervalRef.current)
         farmingIntervalRef.current = null
       }
       
       const finalAmount = farmingAmount
+      console.log('Final farming amount:', finalAmount); // Debug log
+      
       setFarmingAmount(0)
       setIsFarming(false)
 
@@ -58,6 +64,8 @@ export default function Earn() {
           }),
         })
         const data = await response.json()
+        console.log('Farming reward response:', data); // Debug log
+        
         if (data.success) {
           setZoaBalance(prev => prev + finalAmount)
         }
@@ -65,9 +73,14 @@ export default function Earn() {
         console.error('Failed to process farming reward:', error)
       }
     } else {
+      console.log('Starting farming...'); // Debug log
       setIsFarming(true)
       farmingIntervalRef.current = setInterval(() => {
-        setFarmingAmount(prev => prev + 0.0002)
+        setFarmingAmount(prev => {
+          const newAmount = prev + 0.0002;
+          console.log('New farming amount:', newAmount); // Debug log
+          return newAmount;
+        });
       }, 1000)
     }
   }

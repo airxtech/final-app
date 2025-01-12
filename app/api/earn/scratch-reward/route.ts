@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto'
 export async function POST(request: Request) {
   try {
     const { amount, telegramId } = await request.json()
+    console.log('POST Request:', { amount, telegramId }); // Debug log
 
     if (!telegramId || amount === undefined) {
       return NextResponse.json(
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
       where: { telegramId: Number(telegramId) },
       include: { scratchHistory: true }
     })
+
+    console.log('Found User:', user); // Debug log
 
     if (!user) {
       return NextResponse.json(
@@ -43,6 +46,8 @@ export async function POST(request: Request) {
         }
       })
 
+      console.log('Updated User:', updatedUser); // Debug log
+
       // Update or create scratch history
       if (user.scratchHistory) {
         await tx.scratchHistory.update({
@@ -66,6 +71,8 @@ export async function POST(request: Request) {
 
       return updatedUser
     })
+
+    console.log('Final Response:', { zoaBalance: updatedUser.zoaBalance, scratchChances: updatedUser.scratchChances }); // Debug log
 
     return NextResponse.json({
       success: true,

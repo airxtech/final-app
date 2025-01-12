@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { ErrorResponse } from '../../types'
+import type { ErrorResponse } from '@/app/types'
 import { randomUUID } from 'crypto'
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const telegramId = searchParams.get('telegramId')
+    
+    console.log('GET Request - Telegram ID:', telegramId); // Debug log
     
     if (!telegramId) {
       return NextResponse.json<ErrorResponse>(
@@ -24,6 +26,8 @@ export async function GET(request: Request) {
       }
     })
     
+    console.log('Found User:', user); // Debug log
+    
     if (!user) {
       return NextResponse.json<ErrorResponse>(
         { error: 'User not found' },
@@ -33,6 +37,8 @@ export async function GET(request: Request) {
 
     const today = new Date().toISOString().split('T')[0]
     const lastResetDate = user.scratchHistory?.lastResetDate.toISOString().split('T')[0]
+    
+    console.log('Date Check:', { today, lastResetDate }); // Debug log
     
     if (!lastResetDate || today !== lastResetDate) {
       await prisma.$transaction(async (tx) => {
@@ -65,6 +71,8 @@ export async function GET(request: Request) {
 
       user.scratchChances = 3
     }
+
+    console.log('Response:', { zoaBalance: user.zoaBalance, scratchChances: user.scratchChances }); // Debug log
 
     return NextResponse.json({
       success: true,
