@@ -66,9 +66,7 @@ export default function Earn() {
       }
     } else {
       setIsFarming(true)
-      let accumulated = 0
       farmingIntervalRef.current = setInterval(() => {
-        accumulated += 0.0002
         setFarmingAmount(prev => prev + 0.0002)
       }, 1000)
     }
