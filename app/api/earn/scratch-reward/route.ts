@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { randomUUID } from 'crypto'
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +14,8 @@ export async function POST(request: Request) {
     }
 
     const user = await prisma.user.findUnique({
-      where: { telegramId: Number(telegramId) }
+      where: { telegramId: Number(telegramId) },
+      include: { scratchHistory: true }
     })
 
     if (!user) {
@@ -30,13 +32,39 @@ export async function POST(request: Request) {
       )
     }
 
-    const updatedUser = await prisma.user.update({
-      where: { telegramId: Number(telegramId) },
-      data: {
-        zoaBalance: user.zoaBalance + amount,
-        scratchChances: user.scratchChances - 1,
-        lastScratchDate: new Date()
+    // Begin transaction to update both user and scratch history
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      // Update user
+      const updatedUser = await tx.user.update({
+        where: { telegramId: Number(telegramId) },
+        data: {
+          zoaBalance: { increment: amount },
+          scratchChances: { decrement: 1 }
+        }
+      })
+
+      // Update or create scratch history
+      if (user.scratchHistory) {
+        await tx.scratchHistory.update({
+          where: { userId: user.id },
+          data: {
+            lastScratchDate: new Date(),
+            totalScratches: { increment: 1 }
+          }
+        })
+      } else {
+        await tx.scratchHistory.create({
+          data: {
+            id: randomUUID(),
+            userId: user.id,
+            lastScratchDate: new Date(),
+            lastResetDate: new Date(),
+            totalScratches: 1
+          }
+        })
       }
+
+      return updatedUser
     })
 
     return NextResponse.json({
@@ -44,10 +72,10 @@ export async function POST(request: Request) {
       zoaBalance: updatedUser.zoaBalance,
       scratchChances: updatedUser.scratchChances
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('POST request error:', error)
     return NextResponse.json(
-      { error: 'Database operation failed', details: error.message },
+      { error: 'Database operation failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
