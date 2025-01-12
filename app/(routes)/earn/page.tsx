@@ -72,12 +72,12 @@ export default function EarnPage() {
 
   const fetchUserData = async () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const webApp = (window as any).Telegram?.WebApp
-      
-      const userId = webApp?.initDataUnsafe?.user?.id
-      if (!userId) return
+      if (!window?.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+        console.error('No Telegram user ID available')
+        return
+      }
 
+      const userId = window.Telegram.WebApp.initDataUnsafe.user.id
       const response = await fetch(`/api/user?telegramId=${userId}`)
       const data = await response.json()
       
