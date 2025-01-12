@@ -72,11 +72,11 @@ export default function EarnPage() {
 
   const fetchUserData = async () => {
     try {
-      // @ts-expect-error Telegram types are not fully defined
-      const userId = window?.Telegram?.WebApp?.initDataUnsafe?.user?.id
-      if (!userId) return
+      // Type assertion to access Telegram WebApp data
+      const tg = (window as any).Telegram?.WebApp
+      if (!tg?.initDataUnsafe?.user?.id) return
 
-      const response = await fetch(`/api/user?telegramId=${userId}`)
+      const response = await fetch(`/api/user?telegramId=${tg.initDataUnsafe.user.id}`)
       const data = await response.json()
       
       if (response.ok) {
