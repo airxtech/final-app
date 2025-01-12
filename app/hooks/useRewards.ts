@@ -12,7 +12,7 @@ export const useRewards = () => {
       // Generate random reward between 0.5 and 2 ZOA
       const reward = 0.5 + Math.random() * 1.5
       return reward
-    } catch (err) {
+    } catch {
       setError('Failed to generate reward')
       return null
     } finally {

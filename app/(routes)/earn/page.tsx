@@ -1,18 +1,48 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import styles from './styles.module.css'
 import ScratchCard from '@/app/components/shared/ScratchCard'
 import { usePathname } from 'next/navigation'
 
+interface UserData {
+  telegramId: number;
+  zoaBalance: number;
+  scratchChances: number;
+}
+
 export default function EarnPage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<UserData | null>(null)
   const [showScratchCard, setShowScratchCard] = useState(false)
   const [farming, setFarming] = useState(false)
   const [farmingAmount, setFarmingAmount] = useState(0)
   const [lastUpdate, setLastUpdate] = useState<number>(Date.now())
   const [scratchChances, setScratchChances] = useState(0)
   const pathname = usePathname()
+
+  const handleStopFarming = useCallback(async () => {
+    if (!user || farmingAmount === 0) return
+    setFarming(false)
+
+    try {
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId: user.telegramId,
+          zoaBalance: user.zoaBalance + farmingAmount
+        })
+      })
+
+      if (response.ok) {
+        const updatedUser = await response.json()
+        setUser(updatedUser)
+        setFarmingAmount(0)
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error)
+    }
+  }, [user, farmingAmount])
 
   useEffect(() => {
     fetchUserData()
@@ -24,7 +54,7 @@ export default function EarnPage() {
     const interval = setInterval(() => {
       const now = Date.now()
       const timeDiff = now - lastUpdate
-      const increment = (timeDiff / 1000) * 0.0002 // 0.0002 ZOA per second
+      const increment = (timeDiff / 1000) * 0.0002
       setFarmingAmount(prev => prev + increment)
       setLastUpdate(now)
     }, 100)
@@ -32,18 +62,17 @@ export default function EarnPage() {
     return () => clearInterval(interval)
   }, [farming, lastUpdate])
 
-  // Reset farming when user navigates away
   useEffect(() => {
     return () => {
       if (farming) {
         handleStopFarming()
       }
     }
-  }, [pathname])
+  }, [pathname, farming, handleStopFarming])
 
   const fetchUserData = async () => {
     try {
-      // @ts-ignore
+      // @ts-expect-error Telegram types are not fully defined
       const userId = window?.Telegram?.WebApp?.initDataUnsafe?.user?.id
       if (!userId) return
 
@@ -88,7 +117,6 @@ export default function EarnPage() {
     setLastUpdate(Date.now())
     setFarmingAmount(0)
     
-    // Show farming disclaimer
     const disclaimer = document.createElement('div')
     disclaimer.className = styles.farmingDisclaimer
     disclaimer.textContent = 'Farming pauses if you minimize or close the app'
@@ -97,30 +125,6 @@ export default function EarnPage() {
     setTimeout(() => {
       disclaimer.remove()
     }, 3000)
-  }
-
-  const handleStopFarming = async () => {
-    if (!user || farmingAmount === 0) return
-    setFarming(false)
-
-    try {
-      const response = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          telegramId: user.telegramId,
-          zoaBalance: user.zoaBalance + farmingAmount
-        })
-      })
-
-      if (response.ok) {
-        const updatedUser = await response.json()
-        setUser(updatedUser)
-        setFarmingAmount(0)
-      }
-    } catch (error) {
-      console.error('Error updating balance:', error)
-    }
   }
 
   if (!user) {

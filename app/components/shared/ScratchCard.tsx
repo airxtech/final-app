@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 import { useRewards } from '@/app/hooks/useRewards'
 import styles from './ScratchCard.module.css'
@@ -21,50 +21,48 @@ const ScratchCard: React.FC<ScratchCardProps> = ({ onClose, onReveal }) => {
 
   const { handleScratchCard, loading, error } = useRewards()
 
-  useEffect(() => {
-    const initScratchCard = async () => {
-      const rewardAmount = await handleScratchCard()
-      if (rewardAmount === null) {
-        onClose()
-        return
-      }
-      setReward(rewardAmount)
-
-      const mainCanvas = canvasRef.current
-      const bgCanvas = backgroundCanvasRef.current
-      if (!mainCanvas || !bgCanvas) return
-
-      const size = Math.min(window.innerWidth * 0.8, 300)
-      mainCanvas.width = size
-      mainCanvas.height = size
-      bgCanvas.width = size
-      bgCanvas.height = size
-
-      const bgCtx = bgCanvas.getContext('2d')
-      if (!bgCtx) return
-
-      // Background with reward amount
-      bgCtx.fillStyle = '#18181b'
-      bgCtx.fillRect(0, 0, size, size)
-      bgCtx.font = 'bold 40px Inter'
-      bgCtx.textAlign = 'center'
-      bgCtx.textBaseline = 'middle'
-      bgCtx.fillStyle = '#10b981'
-      bgCtx.fillText(`${rewardAmount.toFixed(2)} ZOA`, size/2, size/2)
-
-      // Scratching layer
-      const ctx = mainCanvas.getContext('2d')
-      if (!ctx) return
-
-      const gradient = ctx.createLinearGradient(0, 0, size, size)
-      gradient.addColorStop(0, '#10B981')
-      gradient.addColorStop(1, '#EAB308')
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, size, size)
+  const initCanvas = useCallback(async () => {
+    const rewardAmount = await handleScratchCard()
+    if (rewardAmount === null) {
+      onClose()
+      return
     }
+    setReward(rewardAmount)
 
-    initScratchCard()
-  }, [])
+    const mainCanvas = canvasRef.current
+    const bgCanvas = backgroundCanvasRef.current
+    if (!mainCanvas || !bgCanvas) return
+
+    const size = Math.min(window.innerWidth * 0.8, 300)
+    mainCanvas.width = size
+    mainCanvas.height = size
+    bgCanvas.width = size
+    bgCanvas.height = size
+
+    const bgCtx = bgCanvas.getContext('2d')
+    if (!bgCtx) return
+
+    bgCtx.fillStyle = '#18181b'
+    bgCtx.fillRect(0, 0, size, size)
+    bgCtx.font = 'bold 40px Inter'
+    bgCtx.textAlign = 'center'
+    bgCtx.textBaseline = 'middle'
+    bgCtx.fillStyle = '#10b981'
+    bgCtx.fillText(`${rewardAmount.toFixed(2)} ZOA`, size/2, size/2)
+
+    const ctx = mainCanvas.getContext('2d')
+    if (!ctx) return
+
+    const gradient = ctx.createLinearGradient(0, 0, size, size)
+    gradient.addColorStop(0, '#10B981')
+    gradient.addColorStop(1, '#EAB308')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, size, size)
+  }, [handleScratchCard, onClose])
+
+  useEffect(() => {
+    initCanvas()
+  }, [initCanvas])
 
   const calculateScratchPercentage = (ctx: CanvasRenderingContext2D) => {
     const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -76,7 +74,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({ onClose, onReveal }) => {
     return (transparent / (pixels.length / 4)) * 100
   }
 
-  const scratch = (e: React.MouseEvent | React.TouchEvent) => {
+  const scratch = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing || isRevealed || !reward) return
     e.preventDefault()
 
@@ -109,7 +107,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({ onClose, onReveal }) => {
       onReveal(reward)
       setTimeout(() => onClose(), 1500)
     }
-  }
+  }, [isDrawing, isRevealed, reward, hasScratchStarted, onReveal, onClose])
 
   if (loading) {
     return (
