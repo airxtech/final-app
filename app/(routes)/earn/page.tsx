@@ -72,9 +72,10 @@ export default function EarnPage() {
 
   const fetchUserData = async () => {
     try {
-      // Use type assertion just for this specific access
-      const tg = (window as any).Telegram?.WebApp
-      const userId = tg?.initDataUnsafe?.user?.id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const webApp = (window as any).Telegram?.WebApp
+      
+      const userId = webApp?.initDataUnsafe?.user?.id
       if (!userId) return
 
       const response = await fetch(`/api/user?telegramId=${userId}`)
