@@ -1,20 +1,106 @@
-.container {
-    max-width: 64rem;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-  
-  .title {
-    font-size: 1.875rem;
-    font-weight: bold;
-    color: white;
-    margin-bottom: 1.5rem;
-  }
-  
-  .content {
-    background-color: rgba(31, 41, 55, 0.5);
-    backdrop-filter: blur(8px);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    color: rgb(229, 231, 235);
-  }
+.earnPage {
+  padding: 0 1rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  color: white;
+}
+
+.balanceDisplay {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.balanceDisplay h2 {
+  color: #94a3b8;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.balanceDisplay h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0;
+  background: linear-gradient(135deg, #00a3ff 0%, #00fff2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.actionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.scratchSection,
+.farmingSection {
+  background: rgba(30, 41, 59, 0.5);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.scratchSection h3,
+.farmingSection h3 {
+  color: #f8fafc;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.scratchSection p,
+.farmingSection p {
+  color: #94a3b8;
+  margin: 0 0 1rem 0;
+}
+
+.actionButton {
+  background: linear-gradient(135deg, #00a3ff 0%, #00fff2 100%);
+  color: #000;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actionButton:active {
+  transform: scale(0.98);
+}
+
+.actionButton.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}
+
+.farmingAmount {
+  font-size: 1.1rem;
+  color: #f8fafc;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.farmingDisclaimer {
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.75rem;
+  color: #94a3b8;
+  animation: fadeInOut 2s infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
