@@ -1,165 +1,173 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useTelegram } from '@/app/contexts/TelegramContext'
-import ScratchCard from '@/app/components/ScratchCard'
-import styles from './styles.module.css'
+import { useState, useEffect } from 'react'
+import styles from './page.module.css'
+import ScratchCard from '@/app/components/shared/ScratchCard'
+import { usePathname } from 'next/navigation'
 
-export default function Earn() {
-  const [zoaBalance, setZoaBalance] = useState(0)
+export default function EarnPage() {
+  const [user, setUser] = useState<any>(null)
   const [showScratchCard, setShowScratchCard] = useState(false)
-  const [scratchChances, setScratchChances] = useState(3)
-  const [isFarming, setIsFarming] = useState(false)
+  const [farming, setFarming] = useState(false)
   const [farmingAmount, setFarmingAmount] = useState(0)
-  const farmingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const { user } = useTelegram()
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now())
+  const [scratchChances, setScratchChances] = useState(0)
+  const pathname = usePathname()
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.id) return
-
-      try {
-        const response = await fetch(`/api/earn?telegramId=${user.id}`)
-        const data = await response.json()
-        if (data.success) {
-          setZoaBalance(data.zoaBalance)
-          setScratchChances(data.scratchChances)
-        }
-      } catch (error) {
-        console.error('Failed to fetch user data:', error)
-      }
-    }
-
     fetchUserData()
-  }, [user?.id])
+  }, [])
 
-  const handleFarming = async () => {
-    if (!user?.id) {
-      console.log('No user ID available'); // Debug log
-      return;
+  useEffect(() => {
+    if (!farming) return
+
+    const interval = setInterval(() => {
+      const now = Date.now()
+      const timeDiff = now - lastUpdate
+      const increment = (timeDiff / 1000) * 0.0002 // 0.0002 ZOA per second
+      setFarmingAmount(prev => prev + increment)
+      setLastUpdate(now)
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [farming, lastUpdate])
+
+  // Reset farming when user navigates away
+  useEffect(() => {
+    return () => {
+      if (farming) {
+        handleStopFarming()
+      }
     }
+  }, [pathname])
 
-    if (isFarming) {
-      console.log('Stopping farming...'); // Debug log
-      if (farmingIntervalRef.current) {
-        clearInterval(farmingIntervalRef.current)
-        farmingIntervalRef.current = null
-      }
-      
-      const finalAmount = farmingAmount
-      console.log('Final farming amount:', finalAmount); // Debug log
-      
-      setFarmingAmount(0)
-      setIsFarming(false)
+  const fetchUserData = async () => {
+    try {
+      // @ts-ignore
+      const userId = window?.Telegram?.WebApp?.initDataUnsafe?.user?.id
+      if (!userId) return
 
-      try {
-        const response = await fetch('/api/earn/farming-reward', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            amount: finalAmount,
-            telegramId: user.id
-          }),
-        })
-        const data = await response.json()
-        console.log('Farming reward response:', data); // Debug log
-        
-        if (data.success) {
-          setZoaBalance(prev => prev + finalAmount)
-        }
-      } catch (error) {
-        console.error('Failed to process farming reward:', error)
+      const response = await fetch(`/api/user?telegramId=${userId}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setUser(data)
+        setScratchChances(data.scratchChances)
       }
-    } else {
-      console.log('Starting farming...'); // Debug log
-      setIsFarming(true)
-      farmingIntervalRef.current = setInterval(() => {
-        setFarmingAmount(prev => {
-          const newAmount = prev + 0.0002;
-          console.log('New farming amount:', newAmount); // Debug log
-          return newAmount;
-        });
-      }, 1000)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
     }
   }
 
-  useEffect(() => {
-    return () => {
-      if (farmingIntervalRef.current) {
-        clearInterval(farmingIntervalRef.current)
-      }
-    }
-  }, [])
-
   const handleScratchReveal = async (amount: number) => {
-    if (!user?.id) return
+    if (!user) return
 
     try {
-      const response = await fetch('/api/earn/scratch-reward', {
+      const response = await fetch('/api/user', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          amount,
-          telegramId: user.id
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId: user.telegramId,
+          zoaBalance: user.zoaBalance + amount,
+          scratchChances: scratchChances - 1
+        })
       })
-      const data = await response.json()
-      if (data.success) {
-        setZoaBalance(prev => prev + amount)
-        setScratchChances(prev => prev - 1)
+
+      if (response.ok) {
+        const updatedUser = await response.json()
+        setUser(updatedUser)
+        setScratchChances(updatedUser.scratchChances)
       }
     } catch (error) {
-      console.error('Failed to process scratch reward:', error)
+      console.error('Error updating balance:', error)
     }
+  }
+
+  const handleStartFarming = () => {
+    setFarming(true)
+    setLastUpdate(Date.now())
+    setFarmingAmount(0)
+    
+    // Show farming disclaimer
+    const disclaimer = document.createElement('div')
+    disclaimer.className = styles.farmingDisclaimer
+    disclaimer.textContent = 'Farming pauses if you minimize or close the app'
+    document.body.appendChild(disclaimer)
+    
+    setTimeout(() => {
+      disclaimer.remove()
+    }, 3000)
+  }
+
+  const handleStopFarming = async () => {
+    if (!user || farmingAmount === 0) return
+    setFarming(false)
+
+    try {
+      const response = await fetch('/api/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId: user.telegramId,
+          zoaBalance: user.zoaBalance + farmingAmount
+        })
+      })
+
+      if (response.ok) {
+        const updatedUser = await response.json()
+        setUser(updatedUser)
+        setFarmingAmount(0)
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error)
+    }
+  }
+
+  if (!user) {
+    return <div className={styles.loading}>Loading...</div>
   }
 
   return (
     <div className={styles.earnPage}>
-      <div className={styles.balanceDisplay}>
-        <h2>ZOA Balance</h2>
-        <h1>{zoaBalance.toFixed(2)} ZOA</h1>
+      <div className={styles.balanceCard}>
+        <h2>Your ZOA Balance</h2>
+        <div className={styles.balance}>
+          {user.zoaBalance.toFixed(4)} ZOA
+          {farming && farmingAmount > 0 && (
+            <span className={styles.farming}>
+              +{farmingAmount.toFixed(4)}
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className={styles.actionsContainer}>
+      <div className={styles.earnMethods}>
         <div className={styles.scratchSection}>
           <h3>Scratch to Earn</h3>
-          <p>{scratchChances} chances remaining today</p>
-          <button 
+          <p>Scratch cards refresh daily. Remaining today: {scratchChances}</p>
+          <button
             onClick={() => setShowScratchCard(true)}
             disabled={scratchChances <= 0}
-            className={`${styles.actionButton} ${scratchChances <= 0 ? styles.disabled : ''}`}
+            className={styles.scratchButton}
           >
-            Scratch Now
+            {scratchChances > 0 ? 'Scratch & Earn' : 'No chances left today'}
           </button>
         </div>
 
         <div className={styles.farmingSection}>
-          <h3>Farming</h3>
-          {farmingAmount > 0 && (
-            <p className={styles.farmingAmount}>
-              {farmingAmount.toFixed(4)} ZOA accumulated
-            </p>
-          )}
-          <button 
-            onClick={handleFarming}
-            className={styles.actionButton}
+          <h3>ZOA Farming</h3>
+          <p>Earn 0.0002 ZOA per second while farming</p>
+          <button
+            onClick={farming ? handleStopFarming : handleStartFarming}
+            className={`${styles.farmButton} ${farming ? styles.active : ''}`}
           >
-            {isFarming ? 'Stop Farming' : 'Start Farming'}
+            {farming ? 'Stop Farming' : 'Start Farming'}
           </button>
-          {isFarming && (
-            <p className={styles.farmingDisclaimer}>
-              Farming pauses if you minimize or close the app
-            </p>
-          )}
         </div>
       </div>
 
       {showScratchCard && (
-        <ScratchCard 
+        <ScratchCard
           onClose={() => setShowScratchCard(false)}
           onReveal={handleScratchReveal}
         />

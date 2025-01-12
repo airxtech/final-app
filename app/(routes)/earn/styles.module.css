@@ -5,102 +5,123 @@
   color: white;
 }
 
-.balanceDisplay {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+.balanceCard {
   background: rgba(30, 41, 59, 0.5);
-  border-radius: 1rem;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-.balanceDisplay h2 {
-  color: #94a3b8;
+.balanceCard h2 {
   font-size: 1rem;
+  color: #94a3b8;
   margin-bottom: 0.5rem;
 }
 
-.balanceDisplay h1 {
-  font-size: 2.5rem;
+.balance {
+  font-size: 2.25rem;
   font-weight: bold;
-  margin: 0;
   background: linear-gradient(135deg, #00a3ff 0%, #00fff2 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.actionsContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.farming {
+  display: block;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #10B981 0%, #EAB308 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-top: 0.5rem;
+}
+
+.earnMethods {
+  display: grid;
+  gap: 1.5rem;
 }
 
 .scratchSection,
 .farmingSection {
   background: rgba(30, 41, 59, 0.5);
-  padding: 1.5rem;
-  border-radius: 1rem;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
 }
 
 .scratchSection h3,
 .farmingSection h3 {
-  color: #f8fafc;
-  margin: 0 0 0.75rem 0;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #f8fafc;
 }
 
 .scratchSection p,
 .farmingSection p {
   color: #94a3b8;
-  margin: 0 0 1rem 0;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
 }
 
-.actionButton {
+.scratchButton,
+.farmButton {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
   background: linear-gradient(135deg, #00a3ff 0%, #00fff2 100%);
   color: #000;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  width: 100%;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
 }
 
-.actionButton:active {
-  transform: scale(0.98);
-}
-
-.actionButton.disabled {
+.scratchButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background: rgba(148, 163, 184, 0.2);
   color: #94a3b8;
 }
 
-.farmingAmount {
-  font-size: 1.1rem;
-  color: #f8fafc;
-  text-align: center;
-  margin-bottom: 0.75rem;
-  font-weight: 500;
+.farmButton.active {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  color: white;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 8rem);
+  color: #94a3b8;
 }
 
 .farmingDisclaimer {
-  font-size: 0.9rem;
-  text-align: center;
-  margin-top: 0.75rem;
-  color: #94a3b8;
-  animation: fadeInOut 2s infinite;
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 41, 59, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  animation: fadeInOut 3s forwards;
+  z-index: 1000;
 }
 
 @keyframes fadeInOut {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0% { opacity: 0; transform: translate(-50%, 20px); }
+  10% { opacity: 1; transform: translate(-50%, 0); }
+  90% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -20px); }
 }
