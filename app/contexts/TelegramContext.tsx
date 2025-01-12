@@ -1,88 +1,26 @@
-'use client'
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { TelegramUser, ExtendedTelegramWebApp } from '../types/telegram'
+import React, { createContext, useContext, ReactNode } from 'react';
+import type { TelegramWebApp } from '@/types/telegram';
 
 interface TelegramContextType {
-  user: TelegramUser | null;
-  isLoading: boolean;
-  error: string | null;
+  user?: {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+  };
 }
 
-const TelegramContext = createContext<TelegramContextType>({
-  user: null,
-  isLoading: true,
-  error: null,
-});
+const TelegramContext = createContext<TelegramContextType | undefined>(undefined);
 
-export function TelegramProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<TelegramUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const initTelegram = async () => {
-      try {
-        // Check if we're in the browser and Telegram WebApp is available
-        if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
-          throw new Error('Telegram WebApp is not available');
-        }
-
-        const webApp = window.Telegram.WebApp as ExtendedTelegramWebApp;
-        webApp.ready();
-        console.log('WebApp Data:', webApp.initDataUnsafe); // Debug log
-
-        // Validate the authentication
-        const response = await fetch('/api/auth', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            initData: webApp.initData,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Authentication failed');
-        }
-
-        const userData = webApp.initDataUnsafe?.user;
-        console.log('User Data:', userData); // Debug log
-
-        if (userData) {
-          setUser(userData);
-          
-          // Initialize user in database
-          const dbResponse = await fetch('/api/user', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              telegramId: userData.id,
-              firstName: userData.first_name,
-              lastName: userData.last_name,
-              username: userData.username,
-            }),
-          });
-
-          const dbData = await dbResponse.json();
-          console.log('DB Response:', dbData); // Debug log
-        }
-      } catch (err) {
-        console.error('Telegram initialization error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initTelegram();
-  }, []);
+export function TelegramProvider({ children }: { children: ReactNode }) {
+  // Get user data from Telegram WebApp with proper typing
+  const webApp = window?.Telegram?.WebApp as TelegramWebApp;
+  const value = { user: webApp?.initDataUnsafe?.user };
 
   return (
-    <TelegramContext.Provider value={{ user, isLoading, error }}>
+    <TelegramContext.Provider value={value}>
       {children}
     </TelegramContext.Provider>
   );
@@ -90,7 +28,7 @@ export function TelegramProvider({ children }: { children: React.ReactNode }) {
 
 export function useTelegram() {
   const context = useContext(TelegramContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useTelegram must be used within a TelegramProvider');
   }
   return context;

@@ -1,18 +1,13 @@
 import type { Metadata } from 'next'
-import { TelegramProvider } from '@/app/contexts/TelegramContext'
+import { TonConnectUIProvider } from '@tonconnect/ui-react'
 import Layout from './components/Layout'
 import './globals.css'
 
+const manifestUrl = 'https://your-app-url.vercel.app/tonconnect-manifest.json'
+
 export const metadata: Metadata = {
   title: 'ZOA.fund',
-  description: 'Zero-to-One Accelerator',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover',
-  },
+  description: 'Zero-to-One Accelerator'
 }
 
 export default function RootLayout({
@@ -23,9 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <TelegramProvider>
+        <TonConnectUIProvider manifestUrl={manifestUrl}>
           <Layout>{children}</Layout>
-        </TelegramProvider>
+        </TonConnectUIProvider>
       </body>
     </html>
   )

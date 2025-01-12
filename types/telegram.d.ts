@@ -1,4 +1,17 @@
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: TelegramWebApp;
+    };
+  }
+}
+
 interface TelegramWebApp {
+  ready: () => void;
+  expand: () => void;
+  close: () => void;
+  openLink: (url: string) => void;
+  setBackgroundColor: (color: string) => void;
   initDataUnsafe: {
     user?: {
       id: number;
@@ -6,12 +19,9 @@ interface TelegramWebApp {
       last_name?: string;
       username?: string;
     };
-    auth_date: string;
-    hash: string;
+    auth_date?: string;
+    hash?: string;
   };
-  ready: () => void;
-  expand: () => void;
-  close: () => void;
   MainButton: {
     text: string;
     color: string;
@@ -24,12 +34,4 @@ interface TelegramWebApp {
   };
 }
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: TelegramWebApp;
-    };
-  }
-}
-
-export {}
+export type { TelegramWebApp };

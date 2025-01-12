@@ -1,0 +1,121 @@
+.connectButton {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #00a3ff 0%, #00fff2 100%);
+    color: #000;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .connectButton:hover {
+    opacity: 0.9;
+  }
+  
+  .walletActions {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .actionButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem;
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    color: #fff;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+  }
+  
+  .actionButton:hover {
+    background: rgba(30, 41, 59, 0.7);
+  }
+  
+  .disconnectButton {
+    color: #ef4444;
+  }
+  
+  /* Modal styles */
+  .modalOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.25rem;
+  }
+  
+  .modal {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 20rem;
+    text-align: center;
+  }
+  
+  .modal h3 {
+    font-size: 1.125rem;
+    margin: 0 0 0.75rem;
+    color: #fff;
+  }
+  
+  .modal p {
+    font-size: 1rem;
+    margin: 0 0 1.5rem;
+    color: #94a3b8;
+  }
+  
+  .modalButtons {
+    display: flex;
+    gap: 0.75rem;
+  }
+  
+  .modalButtons button {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .cancelButton {
+    background: rgba(148, 163, 184, 0.1);
+    color: #fff;
+  }
+  
+  .confirmButton {
+    background: linear-gradient(135deg, #00a3ff 0%, #00fff2 100%);
+    color: #000;
+  }
+  
+  .disconnectButton .confirmButton {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+  }
+  
+  .cancelButton:hover,
+  .confirmButton:hover {
+    opacity: 0.9;
+  }
