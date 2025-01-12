@@ -6,8 +6,6 @@ import styles from './page.module.css'
 export default function Home() {
   return (
     <div className={styles.homePage}>
-      <h1 className={styles.pageTitle}>Home</h1>
-
       <section className={styles.hero}>
         <h1>Welcome to ZOA.fund</h1>
         <p className={styles.subtitle}>Zero-to-One Accelerator</p>
