@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import styles from './page.module.css'
+import styles from './styles.module.css'
 import ScratchCard from '@/app/components/shared/ScratchCard'
 import { usePathname } from 'next/navigation'
 
